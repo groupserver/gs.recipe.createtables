@@ -37,7 +37,6 @@ to false or delete "%s"
         self.runonce()
         tableCreator = SetupDB()
         tableCreator.setup_datbase(self.options['database_username'],
-                                   self.options['database_password'],
                                    self.options['database_host'], 
                                    self.options['database_port'], 
                                    self.options['database_name'])
