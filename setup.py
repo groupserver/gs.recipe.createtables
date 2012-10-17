@@ -12,7 +12,7 @@ long_description = (
     file('README.txt').read()
     + '\n' +
     file(os.path.join('docs', 'CONTRIBUTORS.txt')).read()
-    + '\n' + 
+    + '\n' +
     file(os.path.join('docs', 'CHANGES.txt')).read()
     + '\n'
     )
@@ -47,19 +47,18 @@ setup(name='gs.recipe.createtables',
       install_requires=[
         'setuptools',
         'zc.buildout',
-        'gs.group.member.invite.base', 
+        'gs.group.member.invite.base',
         'gs.group.member.request',
-        'gs.group.messages.post', 
+        'gs.group.messages.post',
         'gs.group.messages.topic',
-        'gs.option', 
-        'gs.profile.email.base', 
+        'gs.option',
+        'gs.profile.email.base',
         'gs.profile.email.verify',
         'gs.profile.password',
         'Products.CustomUserFolder',
         'Products.GroupServer',
         'Products.GSAuditTrail',
-        'Products.GSGroupMember', 
-        'Products.XWFMailingListManager',],
+        'Products.GSGroupMember',
+        'Products.XWFMailingListManager', ],
       entry_points=entry_points,
       )
-
