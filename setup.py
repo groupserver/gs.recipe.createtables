@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This module contains the tool of gs.recipe.setupgs
+This module contains the tool of gs.recipe.createtables
 """
 import os
 from setuptools import setup, find_packages
@@ -19,7 +19,7 @@ long_description = (
 entry_point = 'gs.recipe.createtables:Recipe'
 entry_points = {"zc.buildout": ["default = %s" % entry_point]}
 
-setup(name='gs.recipe.setupgs',
+setup(name='gs.recipe.createtables',
       version=version,
       description="Setup GroupServer instance in Zope",
       long_description=long_description,
