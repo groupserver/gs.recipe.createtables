@@ -37,10 +37,10 @@ to false or delete "%s"
         """Installer"""
         self.runonce()
         tableCreator = SetupDB()
-        tableCreator.setup_datbase(self.options['database_username'],
-                                   self.options['database_host'],
-                                   self.options['database_port'],
-                                   self.options['database_name'])
+        tableCreator.setup_database(self.options['database_username'],
+                                    self.options['database_host'],
+                                    self.options['database_port'],
+                                    self.options['database_name'])
         return tuple()
 
     def update(self):
