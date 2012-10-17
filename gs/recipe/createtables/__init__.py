@@ -11,6 +11,8 @@ class Recipe(object):
         # suppress script generation
         self.options['scripts'] = ''
         options['bin-directory'] = buildout['buildout']['bin-directory']
+        self.fileName = os.path.join(self.buildout['buildout']['directory'],
+                                         'var', "%s.cfg" % self.name)
 
     def should_run(self):
         runonce = ((('run-once' in self.options)
@@ -18,29 +20,31 @@ class Recipe(object):
         retval = True  # Uncharactistic optomisim
         if runonce not in ['false', 'off', 'no']:
             # The existance of this file is flag for the run-once option
-            file_name = os.path.join(self.buildout['buildout']['directory'],
-                                     'var', "%s.cfg" % self.name)
-            if os.path.exists(file_name):
+            if os.path.exists(self.fileName):
                 m = '''
 ************************************************
 Skipped: The setup script [%s] has already been run
 If you want to run it again set the run-once option
 to false or delete "%s"
-************************************************\n''' % (self.name, file_name)
+************************************************\n''' %\
+                    (self.name, self.fileName)
                 sys.stdout.write(m)
                 retval = False
-            else:
-                file(file_name, 'w').write('1')
         return retval
+
+    def mark_locked(self):
+            with file(self.fileName, 'w') as lockfile:
+                lockfile.write('1')
 
     def install(self):
         """Installer"""
-        if not (self.should_run()):
+        if self.should_run():
             tableCreator = SetupDB()
             tableCreator.setup_database(self.options['database_username'],
                                         self.options['database_host'],
                                         self.options['database_port'],
                                         self.options['database_name'])
+            self.mark_locked()
             sys.stdout.write('\nTables created\n')
         return tuple()
 
