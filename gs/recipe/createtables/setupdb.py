@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import commands
 from glob import glob
 import os
+from subprocess import Popen, PIPE, STDOUT
 import sys
 
 #lint:disable
@@ -13,7 +13,14 @@ import gs.group.member.invite.base, gs.group.member.request, \
 #lint:enable
 
 
+class SetupError(Exception):
+
+    def __init__(self):
+        super(SetupError, self).__init__()
+
+
 class SetupDB(object):
+
     def setup_database(self, user, host, port, database):
         # The order of the modules is important.
         modules = (gs.option,
@@ -34,7 +41,10 @@ class SetupDB(object):
                 s, o = self.execute_psql_with_file(user, host, port, database,
                                                     fname)
                 m = (o and o) or '.'
-                sys.stdout.write(m)
+                if s == 0:
+                    sys.stdout.write(m)
+                else:
+                    raise SetupError(m)
 
     def get_sql_filenames_from_module(self, module):
         path = os.path.join(os.path.join(*module.__path__), 'sql')
@@ -47,7 +57,9 @@ class SetupDB(object):
         # We pass the -w option to psql because we trust that the
         # gs_install_ubuntu.sh script has set up the PGPASSFILE environment
         # variable.
-        cmd = 'psql -w -U %s -h %s -p %s -d %s -f %s' % (user, host, port,
-                                                         database, filename)
-        status, output = commands.getstatusoutput(cmd)
-        return (status, output)
+        cmd = ['psql', '-w', '-U', user, '-h', host, '-p', port,
+                        '-d', database, '-f', filename]
+        p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+        output = p.stdout.read()
+        retval = (p.returncode, output)
+        return retval
