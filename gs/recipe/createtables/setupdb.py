@@ -3,11 +3,15 @@ import commands
 from glob import glob
 import os
 import sys
+
+#lint:disable
 import gs.group.member.invite.base, gs.group.member.request, \
     gs.group.messages.post, gs.group.messages.topic,\
     gs.option, gs.profile.email.base, gs.profile.email.verify,\
     gs.profile.password, Products.CustomUserFolder, Products.GSAuditTrail,\
     Products.GSGroupMember, Products.XWFMailingListManager
+#lint:enable
+
 
 class SetupDB(object):
     def setup_database(self, user, host, port, database):
@@ -27,8 +31,8 @@ class SetupDB(object):
 
         for module in modules:
             for fname in self.get_sql_filenames_from_module(module):
-                s,o = execute_psql_with_file(user, host, port, database, 
-                    fname)
+                s, o = self.execute_psql_with_file(user, host, port, database,
+                                                    fname)
                 m = (o and o) or '.'
                 sys.stdout.write(m)
 
@@ -38,7 +42,7 @@ class SetupDB(object):
         retval.sort()
         assert type(retval) == list
         return retval
-    
+
     def execute_psql_with_file(self, user, host, port, database, filename):
         # We pass the -w option to psql because we trust that the
         # gs_install_ubuntu.sh script has set up the PGPASSFILE environment

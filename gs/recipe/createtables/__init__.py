@@ -3,6 +3,7 @@ import os
 import sys
 from setupdb import SetupDB
 
+
 class Recipe(object):
     def __init__(self, buildout, name, options):
         self.buildout, self.name, self.options = buildout, name, options
@@ -11,9 +12,9 @@ class Recipe(object):
         self.options['scripts'] = ''
         options['bin-directory'] = buildout['buildout']['bin-directory']
 
-    def runonce(self)
-        runonce = 'run-once' in self.options and \
-                   self.options['run-once'].lower() or 'true'
+    def runonce(self):
+        runonce = ((('run-once' in self.options)
+                    and self.options['run-once'].lower()) or 'true')
         #We'll use the existance of this file as flag for the run-once option
         file_name = os.path.join(self.buildout['buildout']['directory'],
                                  'var', "%s.cfg" % self.name)
@@ -37,7 +38,11 @@ to false or delete "%s"
         self.runonce()
         tableCreator = SetupDB()
         tableCreator.setup_datbase(self.options['database_username'],
-                                   self.options['database_host'], 
-                                   self.options['database_port'], 
+                                   self.options['database_host'],
+                                   self.options['database_port'],
                                    self.options['database_name'])
         return tuple()
+
+    def update(self):
+        """Updater"""
+        self.install()
