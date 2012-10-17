@@ -29,7 +29,7 @@ to false or delete "%s"
 ************************************************
 ''' % (self.name, file_name)
                 sys.stdout.write(m)
-                sys.exit(0)
+                return
             else:
                 file(file_name, 'w').write('1')
 
