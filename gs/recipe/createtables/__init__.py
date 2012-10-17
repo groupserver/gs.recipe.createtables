@@ -12,35 +12,36 @@ class Recipe(object):
         self.options['scripts'] = ''
         options['bin-directory'] = buildout['buildout']['bin-directory']
 
-    def runonce(self):
+    def should_run(self):
         runonce = ((('run-once' in self.options)
                     and self.options['run-once'].lower()) or 'true')
-        #We'll use the existance of this file as flag for the run-once option
-        file_name = os.path.join(self.buildout['buildout']['directory'],
-                                 'var', "%s.cfg" % self.name)
-
+        retval = True  # Uncharactistic optomisim
         if runonce not in ['false', 'off', 'no']:
+            # The existance of this file is flag for the run-once option
+            file_name = os.path.join(self.buildout['buildout']['directory'],
+                                     'var', "%s.cfg" % self.name)
             if os.path.exists(file_name):
                 m = '''
 ************************************************
-Skipped: [%s] has already been run
+Skipped: The setup script [%s] has already been run
 If you want to run it again set the run-once option
 to false or delete "%s"
-************************************************
-''' % (self.name, file_name)
+************************************************\n''' % (self.name, file_name)
                 sys.stdout.write(m)
-                return
+                retval = False
             else:
                 file(file_name, 'w').write('1')
+        return retval
 
     def install(self):
         """Installer"""
-        self.runonce()
-        tableCreator = SetupDB()
-        tableCreator.setup_database(self.options['database_username'],
-                                    self.options['database_host'],
-                                    self.options['database_port'],
-                                    self.options['database_name'])
+        if not (self.should_run()):
+            tableCreator = SetupDB()
+            tableCreator.setup_database(self.options['database_username'],
+                                        self.options['database_host'],
+                                        self.options['database_port'],
+                                        self.options['database_name'])
+            sys.stdout.write('\nTables created\n')
         return tuple()
 
     def update(self):
