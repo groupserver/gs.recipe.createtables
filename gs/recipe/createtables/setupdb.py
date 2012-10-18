@@ -60,6 +60,7 @@ class SetupDB(object):
         cmd = ['psql', '-w', '-U', user, '-h', host, '-p', port,
                         '-d', database, '-f', filename]
         p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+        p.wait()
         output = p.stdout.read()
         retval = (p.returncode, output)
         return retval
