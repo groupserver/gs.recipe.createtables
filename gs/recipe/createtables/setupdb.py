@@ -15,8 +15,8 @@ import gs.group.member.invite.base, gs.group.member.request, \
 
 class SetupError(Exception):
 
-    def __init__(self):
-        super(SetupError, self).__init__()
+    def __init__(self, e):
+        super(SetupError, self).__init__(e)
 
 
 class SetupDB(object):
