@@ -1,16 +1,34 @@
 # -*- coding: utf-8 -*-
+##############################################################################
+#
+# Copyright © 2012, 2013, 2014 OnlineGroups.net and Contributors.
+# All Rights Reserved.
+#
+# This software is subject to the provisions of the Zope Public License,
+# Version 2.1 (ZPL).  A copy of the ZPL should accompany this distribution.
+# THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
+# WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+##############################################################################
+from __future__ import absolute_import, unicode_literals
 from glob import glob
 import os
 from subprocess import Popen, PIPE, STDOUT
 import sys
-
-#lint:disable
-import gs.group.member.invite.base, gs.group.member.request, \
-    gs.group.messages.post, gs.group.messages.topic,\
-    gs.option, gs.profile.email.base, gs.profile.email.verify,\
-    gs.profile.password, Products.CustomUserFolder, Products.GSAuditTrail,\
-    Products.GSGroupMember, Products.XWFMailingListManager
-#lint:enable
+import gs.group.member.invite.base
+import gs.group.member.request
+import gs.group.messages.post
+import gs.group.messages.topic
+import gs.option
+import gs.profile.email.base
+import gs.profile.email.verify
+import gs.profile.password
+import Products.CustomUserFolder
+import Products.GSAuditTrail
+import Products.GSGroupMember
+import Products.XWFMailingListManager
 
 
 class SetupError(Exception):
@@ -40,7 +58,7 @@ class SetupDB(object):
             for fname in self.get_sql_filenames_from_module(module):
                 s, o = self.execute_psql_with_file(user, host, port, database,
                                                     fname)
-                m = (o and o) or '.'
+                m = o if o else '.'
                 if s == 0:
                     sys.stdout.write(m)
                 else:
