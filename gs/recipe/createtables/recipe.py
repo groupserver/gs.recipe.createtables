@@ -18,6 +18,20 @@ from zc.buildout import UserError
 from gs.recipe.base import Recipe
 from .setupdb import (SetupDB, SetupError)
 
+# The order of the modules is important
+#gs.option
+#Products.GSAuditTrail
+#gs.profile.email.base
+#gs.profile.email.verify
+#gs.profile.password
+#Products.CustomUserFolder
+#gs.group.messages.post
+#gs.group.messages.topic
+#Products.XWFMailingListManager
+#gs.group.member.invite.base
+#gs.group.member.request
+#Products.GSGroupMember
+
 
 class CreateTablesRecipe(Recipe):
     def install(self):
@@ -28,7 +42,8 @@ class CreateTablesRecipe(Recipe):
                 tableCreator.setup_database(self.options['database_username'],
                                             self.options['database_host'],
                                             self.options['database_port'],
-                                            self.options['database_name'])
+                                            self.options['database_name'],
+                                            self.options['products'])
             except (OSError, SetupError) as e:
                 m = '{0} Issue setting up the database tables\n{1}\n\n'
                 msg = m.format(self.name, e)
