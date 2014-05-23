@@ -13,6 +13,7 @@
 #
 ##############################################################################
 from __future__ import absolute_import, unicode_literals
+from collections import namedtuple
 from functools import partial
 from glob import glob
 from importlib import import_module
@@ -21,8 +22,12 @@ from subprocess import Popen, PIPE, STDOUT
 import sys
 
 
-class SetupError(Exception):
+#: The named tuple that is used to return the output from the pipe
+OutputReturn = namedtuple('OutputReturn', ('returncode', 'output'))
 
+
+class SetupError(Exception):
+    'An error with some SQL'
     def __init__(self, e):
         super(SetupError, self).__init__(e)
 
@@ -47,12 +52,11 @@ class SetupDB(object):
         return retval
 
     def setup_database(self, user, host, port, database, products):
-        e = partial(self.get_sql_filenames_from_products, user, host, port,
-                        database)
-        for filename in (products):
-            s, o = e(filename=filename)
-            m = o if o else '.'
-            if s == 0:
+        e_sql = partial(self.execute_psql_with_file, user, host, port, database)
+        for filename in self.get_sql_filenames_from_products(products):
+            r = e_sql(filename=filename)
+            m = r.output if r.output else '.'
+            if r.returncode == 0:
                 sys.stdout.write(m)
             else:
                 raise SetupError(m)
@@ -65,7 +69,7 @@ class SetupDB(object):
         cmd = ['psql', '-w', '-U', user, '-h', host, '-p', port,
                         '-d', database, '-f', filename]
         p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
-        p.wait()
+        returncode = p.wait()
         output = p.stdout.read()
-        retval = (p.returncode, output)
+        retval = OutputReturn(returncode, output)
         return retval
