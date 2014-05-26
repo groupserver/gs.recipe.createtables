@@ -51,7 +51,7 @@ Parameters
 Five values must be provided to the recipe.
 
 ``database_username``:
-  The name of the PostgreSQL user.
+  The name of the PostgreSQL user [#password]_.
 
 ``database_host``:
   The host-name of the machine that runs PostgreSQL.
@@ -87,6 +87,10 @@ Resources
 - Questions and comments to http://groupserver.org/groups/development
 - Report bugs at https://redmine.iopen.net/projects/groupserver
 
+.. [#password] This recipe calls ``psql`` with the ``-w`` flag,
+               because we trust that the ``gs_install_ubuntu.sh``
+               script has set up the ``PGPASSFILE`` environment
+               variable.
 .. _GroupServer: http://groupserver.org/
 .. _GroupServer.org: http://groupserver.org/
 .. _OnlineGroups.Net: https://onlinegroups.net
