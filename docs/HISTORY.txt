@@ -1,5 +1,15 @@
-0.1 (xxxx-xx-xx)
-----------------
+Changelog
+=========
 
-- Created recipe with ZopeSkel
-  [Richard Waid]
+2.1.0 (2014-05-26)
+------------------
+
+* Switching the list of modules to be an option, rather than
+  built-in.
+* Refactoring the code to be based on ``gs.recipe.base``.
+* Added unit-tests.
+
+1.0.0 (2012-10-18)
+------------------
+
+* Initial version (forked from ``gs.recipe.setupgs``).
