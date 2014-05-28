@@ -37,13 +37,12 @@ class CreateTablesRecipe(Recipe):
     def install(self):
         """Installer"""
         if self.should_run():
-            tableCreator = SetupDB()
+            tableCreator = SetupDB(self.options['database_username'],
+                                    self.options['database_host'],
+                                    self.options['database_port'],
+                                    self.options['database_name'])
             try:
-                tableCreator.setup_database(self.options['database_username'],
-                                            self.options['database_host'],
-                                            self.options['database_port'],
-                                            self.options['database_name'],
-                                            self.options['products'])
+                tableCreator.setup_database(self.options['products'])
             except (OSError, SetupError) as e:
                 m = '{0} Issue setting up the database tables\n{1}\n\n'
                 msg = m.format(self.name, e)

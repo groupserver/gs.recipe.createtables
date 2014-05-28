@@ -33,7 +33,41 @@ class SetupError(Exception):
 
 
 class SetupDB(object):
-    'Setup the database tables'
+    '''Setup the database tables
+
+:param str user: The PostgreSQL user.
+:param str host: The PostgreSQL host.
+:param str port: The PostgreSQL port.
+:param str database: The name of the PostgreSQL database to connect to.'''
+
+    def __init__(self, user, host, port, database):
+        # Shouts out to Haskell Brooks Curry. Respect.
+        self.exec_sql = partial(self.execute_psql_with_file, user, host, port,
+                                database)
+
+    def setup_database(self, products):
+        '''Setup the databases with the SQL files in the named products.
+
+:param str products: The products to process, seperated by newline ``\n``
+                     characters.
+:returns: ``None``
+:raises SetupError: There was an issue processing a file.
+
+This is the main entry-point to the :class:`SetupDB` class. It connects to
+:prog:`PostgreSQL` using the connection information provided and adds the
+SQL in the ``sql`` directories of the :arg:`products`.
+
+For each file that was successfully processed a ``.`` is displayed on the
+standard outout.'''
+        for filename in self.get_sql_filenames_from_products(products):
+            r = self.exec_sql(filename=filename)
+            m = r.output if r.output else '.'
+            if r.returncode == 0:
+                sys.stdout.write(m)
+            else:
+                msg = 'Issue processing {0}\n{1}'.format(filename, m)
+                raise SetupError(msg)
+
     @staticmethod
     def get_sql_filenames_from_products(products):
         '''Get the SQL files from the products
@@ -50,30 +84,6 @@ class SetupDB(object):
             retval += sqlFiles
         assert type(retval) == list
         return retval
-
-    def setup_database(self, user, host, port, database, products):
-        '''Setup the databases with the SQL files in the named products.
-
-:param str user: The PostgreSQL user.
-:param str host: The PostgreSQL host.
-:param str port: The PostgreSQL port.
-:param str database: The name of the PostgreSQL database to connect to.
-:param str products: The products to process, seperated by newline ``\n``
-                     characters.
-:returns: ``None``
-:raises SetupError: There was an issue processing a file.
-
-For each file that was successfully processed a ``.`` is displayed on the
-standard outout.'''
-        e_sql = partial(self.execute_psql_with_file, user, host, port, database)
-        for filename in self.get_sql_filenames_from_products(products):
-            r = e_sql(filename=filename)
-            m = r.output if r.output else '.'
-            if r.returncode == 0:
-                sys.stdout.write(m)
-            else:
-                msg = 'Issue processing {0}\n{1}'.format(filename, m)
-                raise SetupError(msg)
 
     @staticmethod
     def execute_psql_with_file(user, host, port, database, filename):
