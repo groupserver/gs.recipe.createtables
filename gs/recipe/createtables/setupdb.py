@@ -38,7 +38,8 @@ class SetupDB(object):
 :param str user: The PostgreSQL user.
 :param str host: The PostgreSQL host.
 :param str port: The PostgreSQL port.
-:param str database: The name of the PostgreSQL database to connect to.'''
+:param str database: The name of the PostgreSQL database to connect to.
+:param str eggsDir: The name of the directory that contains all the eggs.'''
 
     def __init__(self, user, host, port, database, eggsDir):
         # Shouts out to Haskell Brooks Curry. Respect.
