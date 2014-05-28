@@ -29,13 +29,13 @@ class TestRecipe(TestCase):
     'Test the CreateTablesRecipe class'
     def setUp(self):
         self.tempdir = mkdtemp()
-        self.bindir = os.path.join(self.tempdir, 'bin')
-        os.mkdir(self.bindir)
-        vardir = os.path.join(self.tempdir, 'var')
-        os.mkdir(vardir)
+        self.bindir = self.mkdir(self.tempdir, 'bin')
+        self.mkdir(self.tempdir, 'var')
+        eggsdir = self.mkdir(self.tempdir, 'eggs')
 
         self.buildout = {'buildout': {'directory': self.tempdir,
-                                        'bin-directory': self.bindir, }, }
+                                        'bin-directory': self.bindir,
+                                        'eggs-directory': eggsdir, }, }
         self.name = 'gs.recipe.createtables'
         self.options = {}
         self.options['recipe'] = 'gs.recipe.createtables'
@@ -50,6 +50,15 @@ class TestRecipe(TestCase):
 
         gs.recipe.createtables.recipe.sys.stdout = MagicMock()
         gs.recipe.createtables.recipe.sys.stderr = MagicMock()
+
+    @staticmethod
+    def mkdir(parentDirName, dirName):
+        '''Make the directory ``dirName`` within ``parentDirName``.
+
+:returns: The name of the new directory.'''
+        retval = os.path.join(parentDirName, dirName)
+        os.mkdir(retval)
+        return retval
 
     def tearDown(self):
         rmtree(self.tempdir)

@@ -40,10 +40,12 @@ class SetupDB(object):
 :param str port: The PostgreSQL port.
 :param str database: The name of the PostgreSQL database to connect to.'''
 
-    def __init__(self, user, host, port, database):
+    def __init__(self, user, host, port, database, eggsDir):
         # Shouts out to Haskell Brooks Curry. Respect.
         self.exec_sql = partial(self.execute_psql_with_file, user, host, port,
                                 database)
+
+        self.eggsDir = eggsDir
 
     def setup_database(self, products):
         '''Setup the databases with the SQL files in the named products.
@@ -68,8 +70,7 @@ standard outout.'''
                 msg = 'Issue processing {0}\n{1}'.format(filename, m)
                 raise SetupError(msg)
 
-    @staticmethod
-    def get_sql_filenames_from_products(products):
+    def get_sql_filenames_from_products(self, products):
         '''Get the SQL files from the products
 
 :param str products: The products, as a whitespace seperated string
@@ -77,6 +78,7 @@ standard outout.'''
 :rtype: A ``list`` of ``str``.'''
         retval = []
         for moduleId in [p.strip() for p in products.split() if p.strip()]:
+            self.add_module_to_path(moduleId)
             module = import_module(moduleId)
             sqlDir = os.path.join(os.path.join(*module.__path__), 'sql')
             sqlFiles = glob(os.path.join(sqlDir, '*sql'))
@@ -84,6 +86,11 @@ standard outout.'''
             retval += sqlFiles
         assert type(retval) == list
         return retval
+
+    def add_module_to_path(self, module):
+        'Add a module to ``sys.path``'
+        p = os.path.join(self.eggsDir, module)
+        sys.path.append(p)
 
     @staticmethod
     def execute_psql_with_file(user, host, port, database, filename):

@@ -23,7 +23,7 @@ class TestSetupDB(TestCase):
 
     def setUp(self):
         self.setupDB = sdb.SetupDB('fake_user', 'db.example.com', '5432',
-                                    'fake_db')
+                                    'fake_db', '')
 
     def test_get_sql_filenames_from_product(self):
         'Can the system extract the SQL for a product?'

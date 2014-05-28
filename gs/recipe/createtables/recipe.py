@@ -40,7 +40,8 @@ class CreateTablesRecipe(Recipe):
             tableCreator = SetupDB(self.options['database_username'],
                                     self.options['database_host'],
                                     self.options['database_port'],
-                                    self.options['database_name'])
+                                    self.options['database_name'],
+                                    self.buildout['buildout']['eggs-directory'])
             try:
                 tableCreator.setup_database(self.options['products'])
             except (OSError, SetupError) as e:
