@@ -15,9 +15,7 @@
 from __future__ import absolute_import, unicode_literals
 from collections import namedtuple
 from functools import partial
-from glob import glob
-from importlib import import_module
-import os
+import pkg_resources
 from subprocess import Popen, PIPE, STDOUT
 import sys
 
@@ -38,21 +36,19 @@ class SetupDB(object):
 :param str user: The PostgreSQL user.
 :param str host: The PostgreSQL host.
 :param str port: The PostgreSQL port.
-:param str database: The name of the PostgreSQL database to connect to.
-:param str eggsDir: The name of the directory that contains all the eggs.'''
+:param str database: The name of the PostgreSQL database to connect to.'''
 
     def __init__(self, user, host, port, database, eggsDir):
         # Shouts out to Haskell Brooks Curry. Respect.
         self.exec_sql = partial(self.execute_psql_with_file, user, host, port,
                                 database)
 
-        self.eggsDir = eggsDir
-
-    def setup_database(self, products):
+    def setup_database(self, products, eggsDir):
         '''Setup the databases with the SQL files in the named products.
 
 :param str products: The products to process, seperated by newline ``\n``
                      characters.
+:param str eggsDir: The directory that contains the eggs for all the products.
 :returns: ``None``
 :raises SetupError: There was an issue processing a file.
 
@@ -62,7 +58,7 @@ SQL in the ``sql`` directories of the :arg:`products`.
 
 For each file that was successfully processed a ``.`` is displayed on the
 standard outout.'''
-        for filename in self.get_sql_filenames_from_products(products):
+        for filename in self.get_sql_filenames_from_products(products, eggsDir):
             r = self.exec_sql(filename=filename)
             m = r.output if r.output else '.'
             if r.returncode == 0:
@@ -71,27 +67,40 @@ standard outout.'''
                 msg = 'Issue processing {0}\n{1}'.format(filename, m)
                 raise SetupError(msg)
 
-    def get_sql_filenames_from_products(self, products):
+    def get_sql_filenames_from_products(self, products, eggsDir):
         '''Get the SQL files from the products
 
-:param str products: The products, as a whitespace seperated string
+:param str products: The products, as a newline-seperated string
 :returns: The SQL files to load, in order.
 :rtype: A ``list`` of ``str``.'''
+        productIds = [p.strip() for p in products.split('\n') if p.strip()]
+        self.add_projects_to_working_set(productIds, eggsDir)
         retval = []
-        for moduleId in [p.strip() for p in products.split() if p.strip()]:
-            self.add_module_to_path(moduleId)
-            module = import_module(moduleId)
-            sqlDir = os.path.join(os.path.join(*module.__path__), 'sql')
-            sqlFiles = glob(os.path.join(sqlDir, '*sql'))
-            sqlFiles.sort()  # The files should be numbered, so sortable.
-            retval += sqlFiles
+        for productId in productIds:
+            provider = pkg_resources.get_provider(productId)
+            if provider.resource_isdir('sql'):
+                sqlFiles = [s for s in provider.resource_listdir('sql')
+                            if s[-4:] == '.sql']
+                sqlFiles.sort()  # The files should be numbered, so sortable.
+                retval += sqlFiles
         assert type(retval) == list
         return retval
 
-    def add_module_to_path(self, module):
-        'Add a module to ``sys.path``'
-        p = os.path.join(self.eggsDir, module)
-        sys.path.append(p)
+    @staticmethod
+    def add_projects_to_working_set(projects, eggsDir):
+        '''Add the list of porjects to the globlal "working_set".
+
+:param list projects: The list of project-names to process.
+:param str eggsDir: The directory that contains the eggs for all the products.
+:returns: ``None``.'''
+        environment = pkg_resources.Environment()
+        for distribution in pkg_resources.find_distribution(eggsDir):
+            environment += distribution
+        ws = pkg_resources.working_set
+        for projectName in projects:
+            requirement = pkg_resources.Requirement.parse(projectName)
+            for distribution in ws.resolve([requirement], environment):
+                ws.add(distribution)
 
     @staticmethod
     def execute_psql_with_file(user, host, port, database, filename):
