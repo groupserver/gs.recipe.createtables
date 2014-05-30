@@ -30,6 +30,10 @@ class TestSetupDB(TestCase):
         products = 'gs.option\n'
         r = self.setupDB.get_sql_filenames_from_products(products, '')
         self.assertEqual(1, len(r))
+        self.assertEqual('/', r[0][0],
+                        'Path is not from root: {0}'.format(r[0]))
+        self.assertEqual('.sql', r[0][-4:],
+                        'Not an SQL file: {0}'.format(r[0]))
 
     def test_get_sql_filenames_from_multiple_products(self):
         'Can the SQL be extracted for multiple products?'
