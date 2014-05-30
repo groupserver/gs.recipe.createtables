@@ -40,8 +40,8 @@ class SetupDB(object):
 
     def __init__(self, user, host, port, database):
         # Shouts out to Haskell Brooks Curry. Respect.
-        self.exec_sql = partial(self.execute_psql_with_file, self, user, host,
-                                port, database)
+        self.exec_sql = partial(self.execute_psql_with_file, user, host, port,
+                                database)
 
     def setup_database(self, products, eggsDir):
         '''Setup the databases with the SQL files in the named products.
