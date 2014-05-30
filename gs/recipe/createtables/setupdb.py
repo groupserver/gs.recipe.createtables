@@ -15,6 +15,7 @@
 from __future__ import absolute_import, unicode_literals
 from collections import namedtuple
 from functools import partial
+import os
 import pkg_resources
 from subprocess import Popen, PIPE, STDOUT
 import sys
@@ -71,7 +72,8 @@ standard outout.'''
         '''Get the SQL files from the products
 
 :param str products: The products, as a newline-seperated string
-:returns: The SQL files to load, in order.
+:returns: The SQL files to load, in order. The files have absolute paths
+          (starting from "/") and end in ``.sql``.
 :rtype: A ``list`` of ``str``.'''
         productIds = [p.strip() for p in products.split('\n') if p.strip()]
         self.add_projects_to_working_set(productIds, eggsDir)
@@ -79,7 +81,8 @@ standard outout.'''
         for productId in productIds:
             if pkg_resources.resource_isdir(productId, 'sql'):
                 allFiles = pkg_resources.resource_listdir(productId, 'sql')
-                sqlFiles = [s for s in allFiles if s[-4:] == '.sql']
+                sqlFiles = [os.path.join('sql', s) for s in allFiles
+                            if s[-4:] == '.sql']
                 sqlFiles.sort()  # The files should be numbered, so sortable.
                 fullFilenames = [pkg_resources.resource_filename(productId, f)
                                 for f in sqlFiles]

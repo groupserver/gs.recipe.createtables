@@ -14,6 +14,7 @@
 ##############################################################################
 from __future__ import absolute_import, unicode_literals
 from mock import patch, MagicMock
+import os
 from unittest import TestCase
 import gs.recipe.createtables.setupdb as sdb
 UTF8 = 'utf-8'
@@ -25,27 +26,37 @@ class TestSetupDB(TestCase):
         self.setupDB = sdb.SetupDB('fake_user', 'db.example.com', '5432',
                                     'fake_db')
 
+    def sql_file_test(self, f):
+        self.assertEqual('/', f[0],
+                        'Path is not from root: {0}'.format(f[0]))
+        self.assertEqual('.sql', f[-4:],
+                        'Not an SQL file: {0}'.format(f))
+        self.assertTrue(os.path.exists(f),
+                        'File does not exist: "{0}"'.format(f))
+
     def test_get_sql_filenames_from_product(self):
         'Can the system extract the SQL for a product?'
         products = 'gs.option\n'
         r = self.setupDB.get_sql_filenames_from_products(products, '')
         self.assertEqual(1, len(r))
-        self.assertEqual('/', r[0][0],
-                        'Path is not from root: {0}'.format(r[0]))
-        self.assertEqual('.sql', r[0][-4:],
-                        'Not an SQL file: {0}'.format(r[0]))
+        for filename in r:
+            self.sql_file_test(filename)
 
     def test_get_sql_filenames_from_multiple_products(self):
         'Can the SQL be extracted for multiple products?'
         products = 'gs.option\nProducts.GSAuditTrail\n'
         r = self.setupDB.get_sql_filenames_from_products(products, '')
         self.assertEqual(2, len(r))
+        for filename in r:
+            self.sql_file_test(filename)
 
     def test_get_sql_filenames_from_multiple_products_2(self):
         'Do blank lines screw us up?'
         products = '\n\ngs.option\n\nProducts.GSAuditTrail\n\n'
         r = self.setupDB.get_sql_filenames_from_products(products, '')
         self.assertEqual(2, len(r))
+        for filename in r:
+            self.sql_file_test(filename)
 
     def test_execute_psql_with_file(self):
         'Can we construct a pipe to psql?'
