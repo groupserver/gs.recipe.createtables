@@ -77,12 +77,13 @@ standard outout.'''
         self.add_projects_to_working_set(productIds, eggsDir)
         retval = []
         for productId in productIds:
-            provider = pkg_resources.get_provider(productId)
-            if provider.resource_isdir('sql'):
-                sqlFiles = [s for s in provider.resource_listdir('sql')
-                            if s[-4:] == '.sql']
+            if pkg_resources.resource_isdir(productId, 'sql'):
+                allFiles = pkg_resources.resource_listdir(productId, 'sql')
+                sqlFiles = [s for s in allFiles if s[-4:] == '.sql']
                 sqlFiles.sort()  # The files should be numbered, so sortable.
-                retval += sqlFiles
+                fullFilenames = [pkg_resources.resource_filename(productId, f)
+                                for f in sqlFiles]
+                retval += fullFilenames
         assert type(retval) == list
         return retval
 
