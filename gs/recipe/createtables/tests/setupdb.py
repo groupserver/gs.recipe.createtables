@@ -23,24 +23,24 @@ class TestSetupDB(TestCase):
 
     def setUp(self):
         self.setupDB = sdb.SetupDB('fake_user', 'db.example.com', '5432',
-                                    'fake_db', '')
+                                    'fake_db')
 
     def test_get_sql_filenames_from_product(self):
         'Can the system extract the SQL for a product?'
         products = 'gs.option\n'
-        r = self.setupDB.get_sql_filenames_from_products(products)
+        r = self.setupDB.get_sql_filenames_from_products(products, '')
         self.assertEqual(1, len(r))
 
     def test_get_sql_filenames_from_multiple_products(self):
         'Can the SQL be extracted for multiple products?'
         products = 'gs.option\nProducts.GSAuditTrail\n'
-        r = self.setupDB.get_sql_filenames_from_products(products)
+        r = self.setupDB.get_sql_filenames_from_products(products, '')
         self.assertEqual(2, len(r))
 
     def test_get_sql_filenames_from_multiple_products_2(self):
         'Do blank lines screw us up?'
         products = '\n\ngs.option\n\nProducts.GSAuditTrail\n\n'
-        r = self.setupDB.get_sql_filenames_from_products(products)
+        r = self.setupDB.get_sql_filenames_from_products(products, '')
         self.assertEqual(2, len(r))
 
     def test_execute_psql_with_file(self):
@@ -71,10 +71,10 @@ class TestSetupDB(TestCase):
                                             return_value=outputReturn)
         sdb.sys.stdout.write = MagicMock(name='sdb_stdout')
 
-        self.setupDB.setup_database('gs.option')
+        self.setupDB.setup_database('gs.option', 'eggs/')
 
         gsqlf = self.setupDB.get_sql_filenames_from_products
-        gsqlf.assert_called_once_with('gs.option')
+        gsqlf.assert_called_once_with('gs.option', 'eggs/')
         self.setupDB.exec_sql.assert_called_once_with(
                                                 filename='/tmp/filename.sql')
         sdb.sys.stdout.write.assert_called_once_with('.')
@@ -88,7 +88,7 @@ class TestSetupDB(TestCase):
         sdb.sys.stdout.write = MagicMock(name='sdb_stdout')
 
         self.assertRaises(sdb.SetupError, self.setupDB.setup_database,
-                            'gs.option')
+                            'gs.option', 'eggs/')
 
         self.setupDB.exec_sql.assert_called_once_with(
                                                 filename='/tmp/filename.sql')
