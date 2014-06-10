@@ -160,8 +160,8 @@ from :prog:`psql`.
         # --=mpj17=-- Note: the -w flag
         cmd = ['psql', '-w', '-U', user, '-h', host, '-p', port,
                         '-d', database, '-f', filename]
-        env = {'PATH': os.environ['PATH'],  # To find psql
-                'PGPASSFILE': passFile}  # To authenticate
+        env = os.environ
+        env['PGPASSFILE'] = passFile  # To authenticate
         p = Popen(cmd, stdout=PIPE, stderr=STDOUT, env=env)
         returncode = p.wait()
         output = p.stdout.read()
