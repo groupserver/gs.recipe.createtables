@@ -42,11 +42,15 @@ class SetupDB(object):
 :param str database: The name of the PostgreSQL database to connect to.'''
 
     def __init__(self, user, password, host, port, database):
-        self.password = password
+        # Set up the password-string. See 31.15 of the PostgreSQL manual
+        # <http://www.postgresql.org/docs/9.3/static/libpq-pgpass.html>
+        # The password is used with the setup_database method.
+        p = '{host}:{port}:{database}:{user}:{password}'
+        self.password = p.format(host=host, port=port, database=database,
+                                    user=user, password=password)
         # Shouts out to Haskell Brooks Curry. Respect.
         self.exec_sql = partial(self.execute_psql_with_file, user=user,
                                 host=host, port=port, database=database)
-        # --=mpj17=-- The password is dealt with in setup_database.
 
     @staticmethod  # Neither "self" nor class is used in this method.
     @contextmanager  # This method is used with a "with" statement
@@ -64,6 +68,8 @@ Once the context closes the file containing the password is deleted.'''
             outfile.write(password)
             retval = outfile.name
         try:
+            # Ensure that only the current user can read and write the file.
+            os.chmod(retval, 0o0600)
             yield retval  # Return the filename
         finally:
             os.remove(retval)  # Ensure the file is deleted
@@ -87,11 +93,10 @@ standard outout.'''
             sqlFiles = self.get_sql_filenames_from_products(products, eggsDir)
             for filename in sqlFiles:
                 r = self.exec_sql(passFile=passFile, filename=filename)
-                m = r.output if r.output else '.'
                 if r.returncode == 0:
-                    sys.stdout.write(m)
+                    sys.stdout.write('.')
                 else:
-                    msg = 'Issue processing {0}\n{1}'.format(filename, m)
+                    msg = 'Issue processing {0}\n{1}'.format(filename, r.output)
                     raise SetupError(msg)
 
     def get_sql_filenames_from_products(self, products, eggsDir):

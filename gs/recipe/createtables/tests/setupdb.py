@@ -35,6 +35,14 @@ class TestSetupDB(TestCase):
                 d = infile.read()
             self.assertEqual(password, d,
                                 'The password in the password-file is wrong')
+
+            s = os.stat(f)
+            # The permissions are the last 12 bits of the mode == 0xFFF
+            perms = oct(s.st_mode & 0o7777)
+            # Use oct() on the literal for Py3 and Py2 compatibility
+            self.assertEqual(oct(0o600), perms,  # RW for the user only.
+                                'The permissions are too lax')
+
             fnForLater = f
         self.assertFalse(os.path.exists(fnForLater),
                         'The password file "{0}" exists'.format(fnForLater))
