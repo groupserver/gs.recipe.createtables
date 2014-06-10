@@ -1,6 +1,12 @@
 Changelog
 =========
 
+3.0.0 (2014-06-10)
+------------------
+
+* Deal with the password in this file, rather than relying on
+  ``gs_install_ubuntu.sh``.
+
 2.1.0 (2014-05-26)
 ------------------
 

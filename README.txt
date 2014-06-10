@@ -7,7 +7,7 @@ A ``zc.buildout`` recipe to add SQL tables for GroupServer
 
 :Author: `Michael JasonSmith`_
 :Contact: Michael JasonSmith <mpj17@onlinegroups.net>
-:Date: 2014-05-22
+:Date: 2014-06-10
 :Organization: `GroupServer.org`_
 :Copyright: This document is licensed under a
   `Creative Commons Attribution-Share Alike 4.0 International License`_
@@ -28,6 +28,7 @@ other ``zc.buildout`` recipes::
   [create-tables]
   recipe = gs.recipe.createtables
   database_username = postgresql_db_user
+  database_password = postgresql_db_user_password
   database_host = localhost
   database_port = 5433
   database_name = groupserver
@@ -48,10 +49,13 @@ other ``zc.buildout`` recipes::
 Parameters
 ----------
 
-Five values must be provided to the recipe.
+Six values must be provided to the recipe.
 
 ``database_username``:
-  The name of the PostgreSQL user [#password]_.
+  The name of the PostgreSQL user.
+
+``database_username``:
+  The password used by the PostgreSQL user [#password]_.
 
 ``database_host``:
   The host-name of the machine that runs PostgreSQL.
@@ -87,10 +91,10 @@ Resources
 - Questions and comments to http://groupserver.org/groups/development
 - Report bugs at https://redmine.iopen.net/projects/groupserver
 
-.. [#password] This recipe calls ``psql`` with the ``-w`` flag,
-               because we trust that the ``gs_install_ubuntu.sh``
-               script has set up the ``PGPASSFILE`` environment
-               variable.
+.. [#password] This recipe writes the password to a temporary
+               file, sets up the ``PGPASSFILE`` environment
+               variable to point at the file, and calls ``psql``
+               with the ``-w`` flag.
 .. _GroupServer: http://groupserver.org/
 .. _GroupServer.org: http://groupserver.org/
 .. _OnlineGroups.Net: https://onlinegroups.net
@@ -102,3 +106,4 @@ Resources
 ..  LocalWords:  SQL sql createtables cfg buildout username
 ..  LocalWords:  postgresql localhost GSAuditTrail GSGroupMember
 ..  LocalWords:  CustomUserFolder XWFMailingListManager
+..  LocalWords:  groupserver
