@@ -38,6 +38,7 @@ class CreateTablesRecipe(Recipe):
         """Installer"""
         if self.should_run():
             tableCreator = SetupDB(self.options['database_username'],
+                                    self.options['database_password'],
                                     self.options['database_host'],
                                     self.options['database_port'],
                                     self.options['database_name'])

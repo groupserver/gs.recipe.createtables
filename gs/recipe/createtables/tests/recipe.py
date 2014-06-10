@@ -40,8 +40,9 @@ class TestRecipe(TestCase):
         self.options = {}
         self.options['recipe'] = 'gs.recipe.createtables'
         self.options['database_username'] = 'example_db_user'
+        self.options['database_password'] = 'example_db_user_password'
         self.options['database_host'] = 'db.example.com'
-        self.options['database_port'] = '5433'
+        self.options['database_port'] = '5432'
         self.options['database_name'] = 'example_db'
         self.options['products'] = 'gs.option\n'
 

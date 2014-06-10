@@ -23,8 +23,21 @@ UTF8 = 'utf-8'
 class TestSetupDB(TestCase):
 
     def setUp(self):
-        self.setupDB = sdb.SetupDB('fake_user', 'db.example.com', '5432',
-                                    'fake_db')
+        self.setupDB = sdb.SetupDB('fake_user', 'fake_password',
+                                    'db.example.com', '5432', 'fake_db')
+
+    def test_password_file(self):
+        password = 'This is a password. Honest.'
+        with self.setupDB.password_file(password) as f:
+            self.assertTrue(os.path.exists(f),
+                            'Password file "{0}" does not exist'.format(f))
+            with open(f, 'r') as infile:
+                d = infile.read()
+            self.assertEqual(password, d,
+                                'The password in the password-file is wrong')
+            fnForLater = f
+        self.assertFalse(os.path.exists(fnForLater),
+                        'The password file "{0}" exists'.format(fnForLater))
 
     def sql_file_test(self, f):
         self.assertEqual('/', f[0],
@@ -67,8 +80,8 @@ class TestSetupDB(TestCase):
             instance.wait.return_value = 0
 
             r = self.setupDB.execute_psql_with_file('fake-user',
-                                    'db.example.com', '5433', 'fake-db',
-                                    '/tmp/filename.sql')
+                    'fake-password', 'db.example.com', '5433', 'fake-db',
+                    '/tmp/filename.sql')
 
             # Do we get the return-code from Popen back?
             self.assertEqual(0, r.returncode)
@@ -77,6 +90,14 @@ class TestSetupDB(TestCase):
             # Did we call psql?
             args, kwargs = Po.call_args
             self.assertEqual('psql', args[0][0])
+
+    def exec_sql_test(self, fn):
+        self.assertEqual(1, fn.call_count,
+                            'SetupDB.exec_sql called too many times')
+        args, kwargs = fn.call_args
+        self.assertIn('filename', kwargs)
+        self.assertEqual('/tmp/filename.sql', kwargs['filename'])
+        self.assertIn('passFile', kwargs)
 
     def test_setup_database_normal(self):
         self.setupDB.get_sql_filenames_from_products = \
@@ -90,8 +111,7 @@ class TestSetupDB(TestCase):
 
         gsqlf = self.setupDB.get_sql_filenames_from_products
         gsqlf.assert_called_once_with('gs.option', 'eggs/')
-        self.setupDB.exec_sql.assert_called_once_with(
-                                                filename='/tmp/filename.sql')
+        self.exec_sql_test(self.setupDB.exec_sql)
         sdb.sys.stdout.write.assert_called_once_with('.')
 
     def test_setup_database_issues(self):
@@ -104,7 +124,5 @@ class TestSetupDB(TestCase):
 
         self.assertRaises(sdb.SetupError, self.setupDB.setup_database,
                             'gs.option', 'eggs/')
-
-        self.setupDB.exec_sql.assert_called_once_with(
-                                                filename='/tmp/filename.sql')
+        self.exec_sql_test(self.setupDB.exec_sql)
         self.assertEqual(0, sdb.sys.stdout.write.call_count)

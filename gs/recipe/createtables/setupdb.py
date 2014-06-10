@@ -14,12 +14,13 @@
 ##############################################################################
 from __future__ import absolute_import, unicode_literals
 from collections import namedtuple
+from contextlib import contextmanager
 from functools import partial
 import os
 import pkg_resources
 from subprocess import Popen, PIPE, STDOUT
 import sys
-
+from tempfile import NamedTemporaryFile
 
 #: The named tuple that is used to return the output from the pipe
 OutputReturn = namedtuple('OutputReturn', ('returncode', 'output'))
@@ -35,14 +36,37 @@ class SetupDB(object):
     '''Setup the database tables
 
 :param str user: The PostgreSQL user.
+:param str password: The password for the PostgreSQL user.
 :param str host: The PostgreSQL host.
 :param str port: The PostgreSQL port.
 :param str database: The name of the PostgreSQL database to connect to.'''
 
-    def __init__(self, user, host, port, database):
+    def __init__(self, user, password, host, port, database):
+        self.password = password
         # Shouts out to Haskell Brooks Curry. Respect.
-        self.exec_sql = partial(self.execute_psql_with_file, user, host, port,
-                                database)
+        self.exec_sql = partial(self.execute_psql_with_file, user=user,
+                                host=host, port=port, database=database)
+        # --=mpj17=-- The password is dealt with in setup_database.
+
+    @staticmethod  # Neither "self" nor class is used in this method.
+    @contextmanager  # This method is used with a "with" statement
+    def password_file(password):
+        '''Write a password to a temporary file, to be used for auth later.
+
+:param str password: The password to write to the temporary file.
+:returns: The name of the file that contains the password.
+:rtype: ``str``.
+
+The :meth:`password_file` method provides a *context* *manager* that writes the
+:arg:`password` argument to a temporary file and returns the name of the file.
+Once the context closes the file containing the password is deleted.'''
+        with NamedTemporaryFile('w', delete=False) as outfile:
+            outfile.write(password)
+            retval = outfile.name
+        try:
+            yield retval  # Return the filename
+        finally:
+            os.remove(retval)  # Ensure the file is deleted
 
     def setup_database(self, products, eggsDir):
         '''Setup the databases with the SQL files in the named products.
@@ -59,19 +83,22 @@ SQL in the ``sql`` directories of the :arg:`products`.
 
 For each file that was successfully processed a ``.`` is displayed on the
 standard outout.'''
-        for filename in self.get_sql_filenames_from_products(products, eggsDir):
-            r = self.exec_sql(filename=filename)
-            m = r.output if r.output else '.'
-            if r.returncode == 0:
-                sys.stdout.write(m)
-            else:
-                msg = 'Issue processing {0}\n{1}'.format(filename, m)
-                raise SetupError(msg)
+        with self.password_file(self.password) as passFile:
+            sqlFiles = self.get_sql_filenames_from_products(products, eggsDir)
+            for filename in sqlFiles:
+                r = self.exec_sql(passFile=passFile, filename=filename)
+                m = r.output if r.output else '.'
+                if r.returncode == 0:
+                    sys.stdout.write(m)
+                else:
+                    msg = 'Issue processing {0}\n{1}'.format(filename, m)
+                    raise SetupError(msg)
 
     def get_sql_filenames_from_products(self, products, eggsDir):
         '''Get the SQL files from the products
 
 :param str products: The products, as a newline-seperated string
+:param str eggsDir: The directory that contains the eggs for all the products.
 :returns: The SQL files to load, in order. The files have absolute paths
           (starting from "/") and end in ``.sql``.
 :rtype: A ``list`` of ``str``.'''
@@ -107,10 +134,11 @@ standard outout.'''
                 ws.add(distribution)
 
     @staticmethod
-    def execute_psql_with_file(user, host, port, database, filename):
+    def execute_psql_with_file(user, passFile, host, port, database, filename):
         '''Execute SQL in PostgreSQL
 
 :param str user: The PostgreSQL user.
+:param str passFile: The file that contains the PostgreSQL password of the user.
 :param str host: The PostgreSQL host.
 :param str port: The PostgreSQL port.
 :param str database: The name of the PostgreSQL database to connect to.
@@ -124,12 +152,12 @@ to the database. The output is read and returned along with the return-code
 from :prog:`psql`.
 
 .. seealso:: The :manpage:`psql(1)` manual page.'''
-        # We pass the -w option to psql because we trust that the
-        # gs_install_ubuntu.sh script has set up the PGPASSFILE environment
-        # variable.
+        # --=mpj17=-- Note: the -w flag
         cmd = ['psql', '-w', '-U', user, '-h', host, '-p', port,
                         '-d', database, '-f', filename]
-        p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+        env = {'PATH': os.environ['PATH'],  # To find psql
+                'PGPASSFILE': passFile}  # To authenticate
+        p = Popen(cmd, stdout=PIPE, stderr=STDOUT, env=env)
         returncode = p.wait()
         output = p.stdout.read()
         retval = OutputReturn(returncode, output)
