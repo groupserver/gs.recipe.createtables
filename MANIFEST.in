@@ -1,5 +1,7 @@
 recursive-include gs *
 recursive-include docs *
 include version.py
-include README.txt
-
+include *.txt
+include *.rst
+include tox.ini
+global-exclude *.pyc
