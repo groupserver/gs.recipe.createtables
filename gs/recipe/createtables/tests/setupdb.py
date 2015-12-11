@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
-# Copyright © 2014 OnlineGroups.net and Contributors.
+# Copyright © 2014, 2015 OnlineGroups.net and Contributors.
 # All Rights Reserved.
 #
 # This software is subject to the provisions of the Zope Public License,
@@ -12,7 +12,7 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, unicode_literals, print_function
 from mock import patch, MagicMock
 import os
 from unittest import TestCase
@@ -113,14 +113,14 @@ class TestSetupDB(TestCase):
         outputReturn = sdb.OutputReturn(returncode=0, output='')
         self.setupDB.exec_sql = MagicMock(name='exec_sql',
                                             return_value=outputReturn)
-        sdb.sys.stdout.write = MagicMock(name='sdb_stdout')
 
-        self.setupDB.setup_database('gs.option', 'eggs/')
+        with patch('gs.recipe.createtables.setupdb.sys.stdout') as sdb_stdout:
+            self.setupDB.setup_database('gs.option', 'eggs/')
 
         gsqlf = self.setupDB.get_sql_filenames_from_products
         gsqlf.assert_called_once_with('gs.option', 'eggs/')
         self.exec_sql_test(self.setupDB.exec_sql)
-        sdb.sys.stdout.write.assert_called_once_with('.')
+        sdb_stdout.write.assert_called_once_with('.')
 
     def test_setup_database_issues(self):
         self.setupDB.get_sql_filenames_from_products = \
@@ -128,9 +128,9 @@ class TestSetupDB(TestCase):
         outputReturn = sdb.OutputReturn(returncode=1, output='Issues!!')
         self.setupDB.exec_sql = MagicMock(name='exec_psql_w_f',
                                             return_value=outputReturn)
-        sdb.sys.stdout.write = MagicMock(name='sdb_stdout')
+        with patch('gs.recipe.createtables.setupdb.sys.stdout') as sdb_stdout:
+            self.assertRaises(sdb.SetupError, self.setupDB.setup_database,
+                              'gs.option', 'eggs/')
+            self.exec_sql_test(self.setupDB.exec_sql)
 
-        self.assertRaises(sdb.SetupError, self.setupDB.setup_database,
-                            'gs.option', 'eggs/')
-        self.exec_sql_test(self.setupDB.exec_sql)
-        self.assertEqual(0, sdb.sys.stdout.write.call_count)
+        self.assertEqual(0, sdb_stdout.call_count)

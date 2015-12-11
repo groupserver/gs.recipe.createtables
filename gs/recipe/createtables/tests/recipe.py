@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
-# Copyright © 2014 OnlineGroups.net and Contributors.
+# Copyright © 2014, 2015 OnlineGroups.net and Contributors.
 # All Rights Reserved.
 #
 # This software is subject to the provisions of the Zope Public License,
@@ -12,8 +12,7 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-from __future__ import absolute_import, unicode_literals
-#import codecs
+from __future__ import absolute_import, unicode_literals, print_function
 from mock import MagicMock, patch
 import os
 from shutil import rmtree
@@ -22,7 +21,6 @@ from unittest import TestCase
 from zc.buildout import UserError
 import gs.recipe.createtables.recipe
 from gs.recipe.createtables.setupdb import SetupError
-UTF8 = 'utf-8'
 
 
 class TestRecipe(TestCase):
@@ -45,12 +43,6 @@ class TestRecipe(TestCase):
         self.options['database_port'] = '5432'
         self.options['database_name'] = 'example_db'
         self.options['products'] = 'gs.option\n'
-
-        #gs.recipe.config.recipe.ConfigCreator.write_token = \
-        #    MagicMock(return_value='fake-token')
-
-        gs.recipe.createtables.recipe.sys.stdout = MagicMock()
-        gs.recipe.createtables.recipe.sys.stderr = MagicMock()
 
     @staticmethod
     def mkdir(parentDirName, dirName):
